@@ -15,20 +15,21 @@
 <style>
 /* ─── RESET & ROOT ─────────────────────────────────────── */
 :root {
-  --bg:        #0a0407;
-  --card:      #130a0a;
-  --card-h:    #1c0e0e;
-  --border:    #2e1616;
-  --gold:      #c9a84c;
-  --gold-lt:   #e8cc7a;
-  --cream:     #f2ead8;
-  --muted:     #8a6060;
-  --dim:       #4a3030;
+  --bg:        #200d10;
+  --card:      #2e1418;
+  --card-h:    #3a1a1e;
+  --border:    #522828;
+  --gold:      #d4aa52;
+  --gold-lt:   #ecd47e;
+  --cream:     #f5ede0;
+  --muted:     #c09898;
+  --dim:       #8a6464;
   --red:       #c0392b;
   --green:     #27ae60;
   --amber:     #e67e22;
-  --recv-bg:   #071a07;
-  --recv-bdr:  #1e4d1e;
+  --recv-bg:   #0d2210;
+  --recv-bdr:  #2a6030;
+  --recv-txt:  #6dcc6d;
 }
 * { margin:0; padding:0; box-sizing:border-box; }
 body { font-family:'Georgia',serif; background:var(--bg); color:var(--cream); min-height:100vh; }
@@ -46,7 +47,7 @@ body { font-family:'Georgia',serif; background:var(--bg); color:var(--cream); mi
 .login-title { font-size:1.5rem; font-weight:400; letter-spacing:4px; color:var(--gold); text-transform:uppercase; margin-bottom:4px; }
 .login-sub { font-size:.72rem; color:var(--muted); letter-spacing:1.5px; text-transform:uppercase; margin-bottom:28px; }
 .login-rule { width:80px; height:1px; background:linear-gradient(90deg,transparent,var(--gold),transparent); margin:0 auto 28px; }
-.login-field { width:100%; background:#1e0d0d; border:1px solid var(--border); border-radius:7px; padding:11px 14px; color:var(--cream); font-family:'Georgia',serif; font-size:.9rem; margin-bottom:12px; }
+.login-field { width:100%; background:#3a1a1e; border:1px solid var(--border); border-radius:7px; padding:11px 14px; color:var(--cream); font-family:'Georgia',serif; font-size:.9rem; margin-bottom:12px; }
 .login-field:focus { outline:none; border-color:var(--gold); }
 .login-btn {
   width:100%; background:var(--gold); color:#1a0a00; border:none; border-radius:7px;
@@ -61,7 +62,7 @@ body { font-family:'Georgia',serif; background:var(--bg); color:var(--cream); mi
 
 /* ─── HEADER ────────────────────────────────────────────── */
 .app-header {
-  background:#100508; border-bottom:1px solid var(--border);
+  background:#280f13; border-bottom:1px solid var(--border);
   padding:12px 20px; position:sticky; top:0; z-index:100;
 }
 .header-row1 { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:10px; }
@@ -80,21 +81,21 @@ body { font-family:'Georgia',serif; background:var(--bg); color:var(--cream); mi
 
 .header-row2 { display:flex; gap:8px; flex-wrap:wrap; }
 .search-input {
-  flex:1; min-width:160px; background:#1a0a0a; border:1px solid var(--border);
+  flex:1; min-width:160px; background:#3a1a1e; border:1px solid var(--border);
   border-radius:6px; padding:7px 12px; color:var(--cream); font-family:'Segoe UI',sans-serif;
   font-size:.82rem;
 }
 .search-input:focus { outline:none; border-color:var(--gold); }
 .search-input::placeholder { color:var(--dim); }
 .filter-sel {
-  background:#1a0a0a; border:1px solid var(--border); border-radius:6px;
+  background:#3a1a1e; border:1px solid var(--border); border-radius:6px;
   padding:7px 10px; color:var(--muted); font-family:'Segoe UI',sans-serif;
   font-size:.75rem; cursor:pointer;
 }
 .filter-sel:focus { outline:none; border-color:var(--gold); }
 
 /* ─── TABS ──────────────────────────────────────────────── */
-.tab-bar { display:flex; border-bottom:1px solid var(--border); background:#0d0507; padding:0 20px; }
+.tab-bar { display:flex; border-bottom:1px solid var(--border); background:#260f12; padding:0 20px; }
 .tab-btn {
   background:none; border:none; color:var(--muted); padding:12px 20px;
   font-family:'Georgia',serif; font-size:.82rem; letter-spacing:1.5px;
@@ -122,16 +123,16 @@ body { font-family:'Georgia',serif; background:var(--bg); color:var(--cream); mi
 /* photo area */
 .card-photo {
   width:100%; height:160px; object-fit:cover; display:block;
-  background:#1e0d0d;
+  background:#3a1a1e;
 }
 .card-photo-wrap { position:relative; }
 .card-photo-svg {
-  width:100%; height:160px; background:#1e0d0d;
+  width:100%; height:160px; background:#3a1a1e;
   display:flex; align-items:center; justify-content:center;
 }
 .qty-badge {
   position:absolute; top:10px; right:10px;
-  background:rgba(10,4,7,.82); border:1px solid var(--border);
+  background:rgba(32,13,16,.88); border:1px solid var(--border);
   color:var(--gold); font-family:'Segoe UI',sans-serif; font-size:.7rem;
   font-weight:700; padding:3px 9px; border-radius:10px; backdrop-filter:blur(4px);
 }
@@ -161,7 +162,7 @@ body { font-family:'Georgia',serif; background:var(--bg); color:var(--cream); mi
 .score-row { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:8px; }
 .sc-chip {
   display:flex; flex-direction:column; align-items:center;
-  background:#1e0d0d; border:1px solid #3a1a1a; border-radius:5px;
+  background:#3a1a1e; border:1px solid #5a2828; border-radius:5px;
   padding:4px 8px; min-width:50px;
 }
 .sc-label { font-size:.52rem; font-family:'Segoe UI',sans-serif; text-transform:uppercase; letter-spacing:.7px; color:var(--muted); }
@@ -219,12 +220,12 @@ body { font-family:'Georgia',serif; background:var(--bg); color:var(--cream); mi
 .form-group { display:flex; flex-direction:column; gap:5px; }
 .form-label { font-size:.62rem; font-family:'Segoe UI',sans-serif; text-transform:uppercase; letter-spacing:1px; color:var(--muted); }
 .form-input, .form-select, .form-textarea {
-  background:#1e0d0d; border:1px solid var(--border); border-radius:6px;
+  background:#3a1a1e; border:1px solid var(--border); border-radius:6px;
   padding:9px 12px; color:var(--cream); font-family:'Segoe UI',sans-serif; font-size:.85rem;
 }
 .form-input:focus, .form-select:focus, .form-textarea:focus { outline:none; border-color:var(--gold); }
 .form-textarea { resize:vertical; min-height:70px; font-family:'Georgia',serif; font-size:.82rem; }
-.form-select option { background:#1e0d0d; }
+.form-select option { background:#3a1a1e; }
 
 /* scores sub-grid */
 .scores-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
@@ -297,7 +298,7 @@ body { font-family:'Georgia',serif; background:var(--bg); color:var(--cream); mi
 .wine-card.received .card-profile { border-top-color:var(--recv-bdr); }
 .ratings-row { display:flex; flex-wrap:wrap; gap:5px; padding:7px 12px 8px; border-top:1px solid var(--border); }
 .wine-card.received .ratings-row { border-top-color:var(--recv-bdr); }
-.score-chip { display:flex; flex-direction:column; align-items:center; background:#1e0d0d; border:1px solid #3a1a1a; border-radius:5px; padding:4px 9px; min-width:52px; }
+.score-chip { display:flex; flex-direction:column; align-items:center; background:#3a1a1e; border:1px solid #5a2828; border-radius:5px; padding:4px 9px; min-width:52px; }
 .score-critic { font-size:.52rem; font-family:'Segoe UI',sans-serif; text-transform:uppercase; letter-spacing:.7px; color:var(--muted); margin-bottom:1px; }
 .score-val { font-size:.85rem; font-weight:700; color:var(--gold); line-height:1; }
 .score-val.score-na { color:var(--dim); font-size:.72rem; font-weight:400; }
@@ -308,7 +309,7 @@ body { font-family:'Georgia',serif; background:var(--bg); color:var(--cream); mi
 .price-deposit { font-size:.7rem; color:var(--muted); font-family:'Segoe UI',sans-serif; }
 .price-deposit strong { color:var(--gold-lt); font-weight:600; }
 .price-balance { font-size:.62rem; color:var(--dim); font-family:'Segoe UI',sans-serif; margin-top:2px; }
-.qty-pill { background:#1e0d0d; border:1px solid var(--border); color:var(--muted); font-size:.63rem; font-family:'Segoe UI',sans-serif; padding:3px 8px; border-radius:4px; white-space:nowrap; }
+.qty-pill { background:#3a1a1e; border:1px solid var(--border); color:var(--muted); font-size:.63rem; font-family:'Segoe UI',sans-serif; padding:3px 8px; border-radius:4px; white-space:nowrap; }
 .wine-card.received .qty-pill { background:var(--recv-bg); border-color:var(--recv-bdr); }
 .bottle-rows { display:flex; flex-direction:column; gap:6px; margin-bottom:8px; }
 .bottle-row { display:flex; align-items:center; justify-content:space-between; gap:8px; }
