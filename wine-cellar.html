@@ -265,12 +265,72 @@ body { font-family:'Georgia',serif; background:var(--bg); color:var(--cream); mi
   padding-bottom:4px; grid-column:1/-1; margin-top:4px;
 }
 
+/* ─── FUTURES TAB ────────────────────────────────────────── */
+#futuresSection { display:none; padding:20px; }
+.fut-summary-bar { display:flex; justify-content:center; flex-wrap:wrap; gap:0; max-width:780px; margin:0 auto 20px; background:var(--card); border:1px solid var(--border); border-radius:10px; overflow:hidden; }
+.fut-summ-item { flex:1; min-width:130px; padding:14px 18px; text-align:center; border-right:1px solid var(--border); }
+.fut-summ-item:last-child { border-right:none; }
+.fut-summ-val { font-size:1.25rem; color:var(--gold); font-weight:600; }
+.fut-summ-lbl { font-size:.6rem; color:var(--muted); text-transform:uppercase; letter-spacing:1.2px; margin-top:3px; font-family:'Segoe UI',sans-serif; }
+.fut-progress-wrap { max-width:780px; margin:0 auto 24px; }
+.fut-progress-track { height:3px; background:var(--border); border-radius:2px; overflow:hidden; margin-bottom:6px; }
+.fut-progress-fill { height:100%; background:linear-gradient(90deg,var(--gold),var(--gold-lt)); border-radius:2px; transition:width .6s ease; }
+.fut-progress-txt { text-align:center; font-size:.68rem; color:var(--muted); letter-spacing:.8px; font-family:'Segoe UI',sans-serif; text-transform:uppercase; }
+.fut-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:16px; max-width:1140px; margin:0 auto; }
+.wine-card { background:var(--card); border:1px solid var(--border); border-radius:12px; overflow:hidden; transition:border-color .25s,box-shadow .25s; position:relative; }
+.wine-card:hover { border-color:#4a2020; box-shadow:0 6px 28px rgba(0,0,0,.5); }
+.wine-card.received { border-color:var(--recv-bdr); background:var(--recv-bg); }
+.wine-card.received:hover { border-color:#2a6a2a; }
+.wine-card.partial { border-color:#4a3a0a; }
+.recv-ribbon { position:absolute; top:10px; right:10px; background:var(--recv-bg); border:1px solid var(--recv-bdr); color:var(--recv-txt,#5aad5a); font-size:.6rem; font-family:'Segoe UI',sans-serif; text-transform:uppercase; letter-spacing:1.2px; padding:2px 8px; border-radius:10px; display:none; }
+.wine-card.received .recv-ribbon { display:block; }
+.card-top { display:flex; }
+.bottle-col { width:80px; flex-shrink:0; display:flex; align-items:center; justify-content:center; padding:16px 6px 12px; }
+.wine-label-img { width:60px; border-radius:4px; box-shadow:0 3px 10px rgba(0,0,0,.5); object-fit:cover; display:block; }
+.wine-details { flex:1; padding:12px 12px 10px 6px; border-left:1px solid var(--border); }
+.wine-card.received .wine-details { border-left-color:var(--recv-bdr); }
+.wine-name { font-size:.96rem; font-weight:600; color:var(--cream); line-height:1.25; margin-bottom:2px; }
+.wine-vintage-line { font-size:.7rem; color:var(--gold); font-style:italic; margin-bottom:5px; }
+.wine-class { font-size:.64rem; color:var(--muted); font-family:'Segoe UI',sans-serif; margin-bottom:3px; }
+.wine-grapes { font-size:.62rem; color:var(--dim); font-family:'Segoe UI',sans-serif; font-style:italic; line-height:1.4; }
+.card-profile { padding:8px 12px; font-size:.7rem; color:var(--muted); line-height:1.6; border-top:1px solid var(--border); font-style:italic; }
+.wine-card.received .card-profile { border-top-color:var(--recv-bdr); }
+.ratings-row { display:flex; flex-wrap:wrap; gap:5px; padding:7px 12px 8px; border-top:1px solid var(--border); }
+.wine-card.received .ratings-row { border-top-color:var(--recv-bdr); }
+.score-chip { display:flex; flex-direction:column; align-items:center; background:#1e0d0d; border:1px solid #3a1a1a; border-radius:5px; padding:4px 9px; min-width:52px; }
+.score-critic { font-size:.52rem; font-family:'Segoe UI',sans-serif; text-transform:uppercase; letter-spacing:.7px; color:var(--muted); margin-bottom:1px; }
+.score-val { font-size:.85rem; font-weight:700; color:var(--gold); line-height:1; }
+.score-val.score-na { color:var(--dim); font-size:.72rem; font-weight:400; }
+.wine-card.received .score-chip { background:var(--recv-bg); }
+.card-body { padding:10px 12px; border-top:1px solid var(--border); }
+.wine-card.received .card-body { border-top-color:var(--recv-bdr); }
+.price-row { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:9px; }
+.price-deposit { font-size:.7rem; color:var(--muted); font-family:'Segoe UI',sans-serif; }
+.price-deposit strong { color:var(--gold-lt); font-weight:600; }
+.price-balance { font-size:.62rem; color:var(--dim); font-family:'Segoe UI',sans-serif; margin-top:2px; }
+.qty-pill { background:#1e0d0d; border:1px solid var(--border); color:var(--muted); font-size:.63rem; font-family:'Segoe UI',sans-serif; padding:3px 8px; border-radius:4px; white-space:nowrap; }
+.wine-card.received .qty-pill { background:var(--recv-bg); border-color:var(--recv-bdr); }
+.bottle-rows { display:flex; flex-direction:column; gap:6px; margin-bottom:8px; }
+.bottle-row { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.recv-label { display:flex; align-items:center; gap:6px; cursor:pointer; font-family:'Segoe UI',sans-serif; font-size:.76rem; color:var(--muted); user-select:none; }
+.recv-label:hover { color:var(--cream); }
+.wine-card.received .recv-label { color:#5aad5a; }
+.recv-label input[type="checkbox"] { width:14px; height:14px; accent-color:var(--gold); cursor:pointer; }
+.recv-date { background:none; border:1px solid var(--border); border-radius:4px; padding:3px 6px; color:var(--muted); font-size:.68rem; font-family:'Segoe UI',sans-serif; width:122px; }
+.recv-date:focus { outline:none; border-color:var(--gold); color:var(--cream); }
+.recv-date:disabled { opacity:.3; cursor:not-allowed; }
+.wine-card.received .recv-date { border-color:var(--recv-bdr); color:#5aad5a; }
+.notes-area { width:100%; background:none; border:1px solid var(--border); border-radius:5px; padding:6px 8px; color:var(--muted); font-size:.7rem; font-family:'Segoe UI',sans-serif; resize:none; min-height:40px; line-height:1.5; }
+.notes-area:focus { outline:none; border-color:var(--gold); color:var(--cream); }
+.wine-card.received .notes-area { border-color:var(--recv-bdr); }
+
 /* ─── RESPONSIVE ─────────────────────────────────────────── */
 @media(max-width:600px){
   .app-header { padding:10px 14px; }
   .cellar-body { padding:12px; }
   .bottle-grid { grid-template-columns:1fr; }
   .modal { padding:20px 16px; }
+  .fut-grid { grid-template-columns:1fr; }
 }
 </style>
 </head>
@@ -303,7 +363,7 @@ body { font-family:'Georgia',serif; background:var(--bg); color:var(--cream); mi
         <button class="hdr-btn logout" onclick="doLogout()">Sign out</button>
       </div>
     </div>
-    <div class="header-row2">
+    <div class="header-row2" id="headerRow2">
       <input class="search-input" type="search" placeholder="Search wine, producer, region…" id="searchInput" oninput="applyFilters()">
       <select class="filter-sel" id="filterCountry" onchange="applyFilters()">
         <option value="">All Countries</option>
@@ -329,15 +389,39 @@ body { font-family:'Georgia',serif; background:var(--bg); color:var(--cream); mi
   <div class="tab-bar">
     <button class="tab-btn active" id="tabCellar" onclick="switchTab('cellar')">Cellar <span id="countCellar">(0)</span></button>
     <button class="tab-btn" id="tabDrank" onclick="switchTab('drank')">Drank <span id="countDrank">(0)</span></button>
+    <button class="tab-btn" id="tabFutures" onclick="switchTab('futures')">Futures 2023</button>
   </div>
 
-  <!-- BODY -->
-  <div class="cellar-body">
+  <!-- CELLAR / DRANK BODY -->
+  <div class="cellar-body" id="cellarBody">
     <div class="bottle-grid" id="bottleGrid"></div>
     <div class="empty-state" id="emptyState" style="display:none">
       <div class="empty-icon">🍾</div>
       <div class="empty-txt">No bottles here yet</div>
     </div>
+  </div>
+
+  <!-- FUTURES BODY -->
+  <div id="futuresSection">
+    <div class="fut-summary-bar">
+      <div class="fut-summ-item">
+        <div class="fut-summ-val" id="futSummBottles">0 / 9</div>
+        <div class="fut-summ-lbl">Bottles Received</div>
+      </div>
+      <div class="fut-summ-item">
+        <div class="fut-summ-val">$807.05</div>
+        <div class="fut-summ-lbl">Total Paid</div>
+      </div>
+      <div class="fut-summ-item">
+        <div class="fut-summ-val" id="futSummBalance">$807.05</div>
+        <div class="fut-summ-lbl">Balance Remaining</div>
+      </div>
+    </div>
+    <div class="fut-progress-wrap">
+      <div class="fut-progress-track"><div class="fut-progress-fill" id="futPFill" style="width:0%"></div></div>
+      <div class="fut-progress-txt" id="futPText">0 of 9 bottles received</div>
+    </div>
+    <div class="fut-grid" id="futGrid"></div>
   </div>
 
 </div>
@@ -370,8 +454,20 @@ body { font-family:'Georgia',serif; background:var(--bg); color:var(--cream); mi
         <input class="form-input" type="number" id="fQty" value="1" min="1">
       </div>
       <div class="form-group">
-        <label class="form-label">Location (rack/shelf)</label>
-        <input class="form-input" type="text" id="fLocation" placeholder="e.g. Rack A, Shelf 2">
+        <label class="form-label">Location</label>
+        <select class="form-select" id="fLocation">
+          <option value="">— Select location —</option>
+          <option value="Left fridge">Left fridge</option>
+          <option value="Right fridge">Right fridge</option>
+          <option value="Rear fridge">Rear fridge</option>
+          <option value="Large cabinet">Large cabinet</option>
+          <option value="Liquor cabinet">Liquor cabinet</option>
+          <option value="Glass cabinet">Glass cabinet</option>
+          <option value="Front wine rack">Front wine rack</option>
+          <option value="Rear wine rack">Rear wine rack</option>
+          <option value="By fish tank">By fish tank</option>
+          <option value="Cellar">Cellar</option>
+        </select>
       </div>
 
       <!-- Country / Region -->
@@ -573,9 +669,16 @@ function startListening() {
 // ─── FILTERS ────────────────────────────────────────────────────────────────
 function switchTab(tab) {
   currentTab = tab;
-  document.getElementById('tabCellar').classList.toggle('active', tab==='cellar');
-  document.getElementById('tabDrank').classList.toggle('active', tab==='drank');
-  applyFilters();
+  document.getElementById('tabCellar').classList.toggle('active',   tab==='cellar');
+  document.getElementById('tabDrank').classList.toggle('active',    tab==='drank');
+  document.getElementById('tabFutures').classList.toggle('active',  tab==='futures');
+  // show/hide sections
+  const isFutures = tab === 'futures';
+  document.getElementById('cellarBody').style.display      = isFutures ? 'none' : 'block';
+  document.getElementById('futuresSection').style.display  = isFutures ? 'block' : 'none';
+  document.getElementById('headerRow2').style.display      = isFutures ? 'none' : 'flex';
+  if (isFutures) renderFutures();
+  else applyFilters();
 }
 
 function applyFilters() {
@@ -1014,6 +1117,201 @@ function fmtDate(d) {
   if (parts.length < 2) return d;
   const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   return `${months[parseInt(parts[1])-1]} ${parts[0]}`;
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// FUTURES TAB — 2023 Bordeaux En Primeur (localStorage, key prefix bx23_)
+// ════════════════════════════════════════════════════════════════════════════
+const futureWines = [
+  { id:'pontet-canet',    name:'Pontet-Canet',          vintage:2023, appellation:'Pauillac',
+    classification:'5ème Grand Cru Classé 1855',
+    grapes:'~75% Cab. Sauvignon · 18% Merlot · 4% Cab. Franc · 3% Petit Verdot',
+    profile:"Biodynamic pioneer that consistently outperforms its 5th Growth. Powerful and structured — blackcurrant, graphite, cedar box, iron. Aging: 20–35 years.",
+    deposit:103.81, fullPrice:207.62, qty:1, bottles:1,
+    bColor:'#7a001c', aColor:'#d63031', aBg:'rgba(214,48,49,.15)',
+    ratings:{js:98,wa:98,vinous:97,decanter:97} },
+  { id:'clos-oratoire',   name:"Clos de l'Oratoire",    vintage:2023, appellation:'Saint-Émilion',
+    classification:'Grand Cru Classé',
+    grapes:'~70% Merlot · 30% Cabernet Franc',
+    profile:"Von Neipperg sibling estate. Rich plush dark fruit, violet, plum, spice. Aging: 8–15 years.",
+    deposit:39.30, fullPrice:78.60, qty:1, bottles:1,
+    bColor:'#5a0d6e', aColor:'#9b59b6', aBg:'rgba(155,89,182,.15)',
+    ratings:{js:null,wa:null,vinous:null,decanter:null} },
+  { id:'domaine-chevalier', name:'Domaine de Chevalier', vintage:2023, appellation:'Pessac-Léognan',
+    classification:'Cru Classé de Graves',
+    grapes:'~65% Cab. Sauvignon · 30% Merlot · 5% Petit Verdot',
+    profile:"Mineral-driven and elegant — dark berry, tobacco, pencil shavings, subtle earth. Aging: 15–25 years.",
+    deposit:73.29, fullPrice:146.58, qty:1, bottles:1,
+    bColor:'#0d3b0d', aColor:'#27ae60', aBg:'rgba(39,174,96,.13)',
+    ratings:{js:null,wa:null,vinous:null,decanter:null} },
+  { id:'grand-puy-lacoste', name:'Grand-Puy-Lacoste',   vintage:2023, appellation:'Pauillac',
+    classification:'5ème Grand Cru Classé 1855',
+    grapes:'~75% Cabernet Sauvignon · ~25% Merlot',
+    profile:"Classic textbook Pauillac — cassis, tobacco, cigar box, lead pencil. Exceptional value. Aging: 12–20+ years.",
+    deposit:73.29, fullPrice:146.58, qty:1, bottles:1,
+    bColor:'#7a001c', aColor:'#d63031', aBg:'rgba(214,48,49,.15)',
+    ratings:{js:96,wa:95,vinous:95,decanter:95} },
+  { id:'monbousquet',     name:'Monbousquet',            vintage:2023, appellation:'Saint-Émilion',
+    classification:'Grand Cru Classé',
+    grapes:'~70% Merlot · 20% Cab. Franc · 10% Cab. Sauvignon',
+    profile:"Gérard Perse's estate. Dark plum, blackberry jam, mocha, oak spice. Lush and age-worthy. Aging: 10–18 years.",
+    deposit:57.42, fullPrice:114.84, qty:1, bottles:1,
+    bColor:'#5a0d6e', aColor:'#9b59b6', aBg:'rgba(155,89,182,.15)',
+    ratings:{js:null,wa:null,vinous:null,decanter:null} },
+  { id:'canon-gaffeliere', name:'Canon La Gaffelière',   vintage:2023, appellation:'Saint-Émilion',
+    classification:'1er Grand Cru Classé B',
+    grapes:'~55% Cabernet Franc · 40% Merlot · 5% Cab. Sauvignon',
+    profile:"Von Neipperg's jewel. Violet, red cherry, herbs, dried flowers, mineral spice. Remarkably elegant. Aging: 15–25 years.",
+    deposit:162.22, fullPrice:324.44, qty:2, bottles:2,
+    bColor:'#5a0d6e', aColor:'#9b59b6', aBg:'rgba(155,89,182,.15)',
+    ratings:{js:97,wa:96,vinous:96,decanter:null} },
+  { id:'la-mondotte',     name:'La Mondotte',            vintage:2023, appellation:'Saint-Émilion',
+    classification:'1er Grand Cru Classé A',
+    grapes:'~80% Merlot · 20% Cabernet Franc',
+    profile:"Von Neipperg prestige cuvée — ~3,000 cases/year. Extraordinarily concentrated, velvety depth. Collector's wine. Aging: 25–40+ years.",
+    deposit:169.05, fullPrice:338.10, qty:1, bottles:1,
+    bColor:'#38005c', aColor:'#6c3483', aBg:'rgba(108,52,131,.2)',
+    ratings:{js:98,wa:94,vinous:97,decanter:95} },
+  { id:'carmes-haut-brion', name:'Les Carmes Haut-Brion', vintage:2023, appellation:'Pessac-Léognan',
+    classification:'Cru Classé de Graves',
+    grapes:'~45% Cab. Franc · 40% Merlot · 15% Cab. Sauvignon',
+    profile:"Neighbor to Haut-Brion. Red fruits, iron, violets, mineral character. Age-worthy elegance. Aging: 12–22 years.",
+    deposit:128.67, fullPrice:257.34, qty:1, bottles:1,
+    bColor:'#0d3b0d', aColor:'#27ae60', aBg:'rgba(39,174,96,.13)',
+    ratings:{js:98,wa:97,vinous:94,decanter:97} }
+];
+
+const FUT_TOTAL = futureWines.reduce((s,w) => s + w.bottles, 0);
+
+function futKey(id, n) { return `bx23_${id}_${n}`; }
+function futLoad() { try { return JSON.parse(localStorage.getItem('bx2023_tracker') || '{}'); } catch { return {}; } }
+function futSave(st) { localStorage.setItem('bx2023_tracker', JSON.stringify(st)); }
+let futState = futLoad();
+function getFutBottle(id, n) { return futState[futKey(id,n)] || {received:false,date:'',notes:''}; }
+
+function futReceivedCount() {
+  let n = 0;
+  futureWines.forEach(w => { for (let i=1; i<=w.bottles; i++) { if (getFutBottle(w.id,i).received) n++; } });
+  return n;
+}
+
+function futUpdateSummary() {
+  const recv = futReceivedCount();
+  document.getElementById('futSummBottles').textContent = `${recv} / ${FUT_TOTAL}`;
+  document.getElementById('futPFill').style.width = (recv/FUT_TOTAL*100) + '%';
+  document.getElementById('futPText').textContent  = `${recv} of ${FUT_TOTAL} bottles received`;
+  let bal = 0;
+  futureWines.forEach(w => {
+    const perBal = w.deposit / w.bottles;
+    for (let i=1; i<=w.bottles; i++) { if (!getFutBottle(w.id,i).received) bal += perBal; }
+  });
+  document.getElementById('futSummBalance').textContent = '$' + bal.toFixed(2);
+}
+
+function futBottleSVG(c) {
+  const id = 'fsvg' + c.replace('#','');
+  return `<svg viewBox="0 0 60 188" width="46" height="140" xmlns="http://www.w3.org/2000/svg">
+    <defs><linearGradient id="${id}" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="${c}" stop-opacity=".65"/><stop offset="45%" stop-color="${c}" stop-opacity="1"/><stop offset="100%" stop-color="${c}" stop-opacity=".65"/>
+    </linearGradient></defs>
+    <rect x="22" y="5" width="16" height="4" rx="2" fill="${c}"/>
+    <rect x="23" y="9" width="14" height="14" rx="3" fill="url(#${id})"/>
+    <rect x="24" y="23" width="12" height="18" fill="${c}"/>
+    <path d="M24,41 C17,52 13,64 12,75 L48,75 C47,64 43,52 36,41 Z" fill="${c}"/>
+    <rect x="12" y="75" width="36" height="94" rx="3" fill="url(#${id})"/>
+    <ellipse cx="30" cy="168" rx="15" ry="5" fill="rgba(0,0,0,.35)"/>
+    <rect x="15" y="93" width="30" height="52" rx="2" fill="rgba(255,248,230,.06)" stroke="rgba(255,248,230,.14)" stroke-width=".6"/>
+    <rect x="13" y="75" width="6" height="94" fill="rgba(255,255,255,.04)" rx="2"/>
+  </svg>`;
+}
+
+function renderFutures() {
+  const grid = document.getElementById('futGrid');
+  grid.innerHTML = '';
+  futureWines.forEach(w => {
+    const bottles = [];
+    let allRecv = true, anyRecv = false;
+    for (let i=1; i<=w.bottles; i++) {
+      const bs = getFutBottle(w.id, i);
+      bottles.push(bs);
+      if (!bs.received) allRecv = false;
+      if (bs.received)  anyRecv = true;
+    }
+    const cardClass = 'wine-card' + (allRecv?' received':(anyRecv?' partial':''));
+    let bottleRows = '';
+    for (let i=1; i<=w.bottles; i++) {
+      const bs = bottles[i-1];
+      const lbl = w.bottles > 1 ? `Bottle ${i} received` : 'Received';
+      bottleRows += `<div class="bottle-row">
+        <label class="recv-label">
+          <input type="checkbox" ${bs.received?'checked':''} onchange="futOnCheck('${w.id}',${i},this)">
+          ${lbl}
+        </label>
+        <input type="date" class="recv-date" value="${bs.date||''}" ${!bs.received?'disabled':''}
+               onchange="futOnDate('${w.id}',${i},this.value)">
+      </div>`;
+    }
+    const notes = bottles[0].notes || '';
+    const r = w.ratings;
+    const card = document.createElement('div');
+    card.className = cardClass;
+    card.innerHTML = `
+      <span class="recv-ribbon">✓ Received</span>
+      <div class="card-top">
+        <div class="bottle-col">
+          <img src="wine-images/${w.id}.jpg" alt="${esc(w.name)}" class="wine-label-img"
+               onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div style="display:none">${futBottleSVG(w.bColor)}</div>
+        </div>
+        <div class="wine-details">
+          <span class="app-tag" style="background:${w.aBg};color:${w.aColor};border:1px solid ${w.aColor}35">${esc(w.appellation)}</span>
+          <div class="wine-name">${esc(w.name)}</div>
+          <div class="wine-vintage-line">${w.vintage} · 750ml${w.qty>1?' · '+w.qty+' btls':''}</div>
+          <div class="wine-class">${esc(w.classification)}</div>
+          <div class="wine-grapes">${esc(w.grapes)}</div>
+        </div>
+      </div>
+      <div class="card-profile">${esc(w.profile)}</div>
+      <div class="ratings-row">
+        ${[['JS',r.js],['WA',r.wa],['Vinous',r.vinous],['Decanter',r.decanter]].map(([lbl,sc])=>
+          `<div class="score-chip"><span class="score-critic">${lbl}</span>
+           <span class="score-val${sc===null?' score-na':''}">${sc===null?'—':sc}</span></div>`
+        ).join('')}
+      </div>
+      <div class="card-body">
+        <div class="price-row">
+          <div>
+            <div class="price-deposit">Paid: <strong>$${w.deposit.toFixed(2)}</strong></div>
+            <div class="price-balance">Balance due on delivery: $${w.deposit.toFixed(2)}</div>
+          </div>
+          <div class="qty-pill">${w.qty===1?'1 bottle':w.qty+' bottles'}</div>
+        </div>
+        <div class="bottle-rows">${bottleRows}</div>
+        <textarea class="notes-area" rows="2"
+                  placeholder="Condition on arrival, storage location, tasting notes…"
+                  onchange="futOnNotes('${w.id}',this.value)">${esc(notes)}</textarea>
+      </div>`;
+    grid.appendChild(card);
+  });
+  futUpdateSummary();
+}
+
+function futOnCheck(id, n, cb) {
+  const key = futKey(id, n);
+  if (!futState[key]) futState[key] = {received:false,date:'',notes:''};
+  futState[key].received = cb.checked;
+  if (cb.checked && !futState[key].date) futState[key].date = new Date().toISOString().split('T')[0];
+  futSave(futState); renderFutures();
+}
+function futOnDate(id, n, val) {
+  const key = futKey(id, n);
+  if (!futState[key]) futState[key] = {received:false,date:'',notes:''};
+  futState[key].date = val; futSave(futState);
+}
+function futOnNotes(id, val) {
+  const key = futKey(id, 1);
+  if (!futState[key]) futState[key] = {received:false,date:'',notes:''};
+  futState[key].notes = val; futSave(futState);
 }
 </script>
 </body>
