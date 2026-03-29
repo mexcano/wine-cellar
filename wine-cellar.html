@@ -325,6 +325,38 @@ body { font-family:'Georgia',serif; background:var(--bg); color:var(--cream); mi
 .notes-area:focus { outline:none; border-color:var(--gold); color:var(--cream); }
 .wine-card.received .notes-area { border-color:var(--recv-bdr); }
 
+/* ─── PENDING / QUICK CAPTURE ────────────────────────────── */
+.hdr-btn.quick { background:var(--amber); color:#1a0a00; }
+.hdr-btn.quick:hover { background:#f39c12; }
+.pending-card { border-color:rgba(230,126,34,.5) !important; }
+.pending-card:hover { border-color:var(--amber) !important; }
+.pending-card .card-photo { height:240px; }
+.pending-card .card-photo-svg { height:240px; }
+.pending-banner {
+  background:rgba(230,126,34,.12); border-bottom:1px solid rgba(230,126,34,.25);
+  color:var(--amber); font-size:.62rem; font-family:'Segoe UI',sans-serif;
+  padding:5px 14px; letter-spacing:.9px; text-transform:uppercase; font-weight:600;
+}
+.pending-count {
+  display:inline-block; background:var(--amber); color:#1a0a00;
+  border-radius:9px; padding:1px 6px; font-size:.6rem; font-weight:700;
+  font-family:'Segoe UI',sans-serif; margin-left:4px; vertical-align:middle;
+}
+/* Quick-capture modal */
+.qc-zone {
+  width:100%; border:2px dashed var(--border); border-radius:10px;
+  min-height:160px; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:10px;
+  cursor:pointer; transition:border-color .2s; padding:28px;
+  background:#3a1a1e;
+}
+.qc-zone:hover { border-color:var(--amber); }
+.qc-zone.has-photo { border-style:solid; border-color:var(--amber); padding:0; overflow:hidden; }
+#qcPreview { width:100%; max-height:300px; object-fit:contain; display:none; border-radius:8px; }
+.qc-ph-icon { font-size:2.2rem; margin-bottom:6px; }
+.qc-ph-txt  { font-size:.78rem; font-family:'Segoe UI',sans-serif; color:var(--muted); }
+.qc-ph-sub  { font-size:.65rem; color:var(--dim); margin-top:4px; font-family:'Segoe UI',sans-serif; }
+
 /* ─── RESPONSIVE ─────────────────────────────────────────── */
 @media(max-width:600px){
   .app-header { padding:10px 14px; }
@@ -360,6 +392,7 @@ body { font-family:'Georgia',serif; background:var(--bg); color:var(--cream); mi
       <div class="hdr-title">🍷 Wine Cellar</div>
       <div class="hdr-right">
         <span class="hdr-user" id="hdrUser"></span>
+        <button class="hdr-btn quick" onclick="openQuickCapture()">📷 Capture</button>
         <button class="hdr-btn" onclick="openAddModal()">＋ Add Bottle</button>
         <button class="hdr-btn logout" onclick="doLogout()">Sign out</button>
       </div>
@@ -390,6 +423,7 @@ body { font-family:'Georgia',serif; background:var(--bg); color:var(--cream); mi
   <div class="tab-bar">
     <button class="tab-btn active" id="tabCellar" onclick="switchTab('cellar')">Cellar <span id="countCellar">(0)</span></button>
     <button class="tab-btn" id="tabDrank" onclick="switchTab('drank')">Drank <span id="countDrank">(0)</span></button>
+    <button class="tab-btn" id="tabPending" onclick="switchTab('pending')">Pending <span id="countPending" class="pending-count" style="display:none">0</span></button>
     <button class="tab-btn" id="tabFutures" onclick="switchTab('futures')">Futures 2023</button>
   </div>
 
@@ -604,6 +638,48 @@ body { font-family:'Georgia',serif; background:var(--bg); color:var(--cream); mi
   </div>
 </div>
 
+<!-- ════════ QUICK CAPTURE MODAL ════════ -->
+<div class="overlay" id="qcOverlay" onclick="qcOverlayClose(event)">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-title">📷 Quick Capture</div>
+    <p style="font-size:.76rem;color:var(--muted);font-family:'Segoe UI',sans-serif;margin-bottom:18px;line-height:1.65">
+      Snap your bottle now — fill in the details later from the
+      <strong style="color:var(--amber)">Pending</strong> tab on your desktop.
+    </p>
+
+    <div class="qc-zone" id="qcZone" onclick="document.getElementById('qcPhotoInput').click()">
+      <img id="qcPreview" alt="bottle preview">
+      <div id="qcPlaceholder" style="text-align:center">
+        <div class="qc-ph-icon">📷</div>
+        <div class="qc-ph-txt">Tap to take or choose a photo</div>
+        <div class="qc-ph-sub">Opens your camera on iPhone</div>
+      </div>
+    </div>
+    <input type="file" id="qcPhotoInput" accept="image/*" capture="environment" style="display:none" onchange="onQcPhotoSelect(this)">
+
+    <div style="margin-top:14px">
+      <label class="form-label">Quick Note <span style="color:var(--dim);font-weight:400">(optional — rack location, gift, etc.)</span></label>
+      <input class="form-input" type="text" id="qcNote" placeholder="e.g. rack A shelf 2, birthday gift from Susy">
+    </div>
+
+    <div id="qcErr" style="color:#e74c3c;font-size:.74rem;min-height:18px;margin-top:8px;font-family:'Segoe UI',sans-serif"></div>
+    <div id="qcProgressWrap" style="display:none;margin-top:8px">
+      <div style="height:4px;background:#3a1a1e;border-radius:2px">
+        <div id="qcProgressFill" style="height:4px;background:var(--amber);border-radius:2px;width:0%;transition:width .2s"></div>
+      </div>
+      <div id="qcProgressTxt" style="font-size:.68rem;color:var(--muted);font-family:'Segoe UI',sans-serif;margin-top:4px"></div>
+    </div>
+
+    <div class="modal-footer" style="margin-top:18px">
+      <div></div>
+      <div class="modal-footer-right">
+        <button class="btn btn-ghost" onclick="closeQuickCapture()">Cancel</button>
+        <button class="btn" id="qcSaveBtn" onclick="saveQuickCapture()" style="background:var(--amber);color:#1a0a00">💾 Save to Pending</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ════════ FIREBASE + APP LOGIC ════════ -->
 <script>
 // ─── FIREBASE CONFIG — replace with your project values ───────────────────
@@ -673,12 +749,12 @@ function switchTab(tab) {
   currentTab = tab;
   document.getElementById('tabCellar').classList.toggle('active',   tab==='cellar');
   document.getElementById('tabDrank').classList.toggle('active',    tab==='drank');
+  document.getElementById('tabPending').classList.toggle('active',  tab==='pending');
   document.getElementById('tabFutures').classList.toggle('active',  tab==='futures');
-  // show/hide sections
   const isFutures = tab === 'futures';
   document.getElementById('cellarBody').style.display      = isFutures ? 'none' : 'block';
   document.getElementById('futuresSection').style.display  = isFutures ? 'block' : 'none';
-  document.getElementById('headerRow2').style.display      = isFutures ? 'none' : 'flex';
+  document.getElementById('headerRow2').style.display      = (isFutures || tab==='pending') ? 'none' : 'flex';
   if (isFutures) renderFutures();
   else applyFilters();
 }
@@ -691,8 +767,9 @@ function applyFilters() {
   const yr     = new Date().getFullYear();
 
   const list = allBottles.filter(b => {
-    if (currentTab==='cellar' && b.drank) return false;
-    if (currentTab==='drank'  && !b.drank) return false;
+    if (currentTab==='cellar'  && (b.drank || b.status==='pending')) return false;
+    if (currentTab==='drank'   && (!b.drank || b.status==='pending')) return false;
+    if (currentTab==='pending' && b.status !== 'pending') return false;
 
     if (q) {
       const hay = `${b.name||''} ${b.producer||''} ${b.appellation||''} ${b.region||''}`.toLowerCase();
@@ -718,10 +795,14 @@ function applyFilters() {
   });
 
   // update counts
-  const cellarN = allBottles.filter(b => !b.drank).length;
-  const drankN  = allBottles.filter(b =>  b.drank).length;
+  const cellarN  = allBottles.filter(b => !b.drank && b.status !== 'pending').length;
+  const drankN   = allBottles.filter(b =>  b.drank && b.status !== 'pending').length;
+  const pendingN = allBottles.filter(b => b.status === 'pending').length;
   document.getElementById('countCellar').textContent = `(${cellarN})`;
   document.getElementById('countDrank').textContent  = `(${drankN})`;
+  const pcBadge = document.getElementById('countPending');
+  pcBadge.textContent    = pendingN;
+  pcBadge.style.display  = pendingN > 0 ? 'inline-block' : 'none';
 
   renderGrid(list);
 }
@@ -754,6 +835,31 @@ function renderGrid(bottles) {
   const yr = new Date().getFullYear();
 
   bottles.forEach(b => {
+    // ── Pending card (photo-only, awaiting details) ──────────────────────────
+    if (b.status === 'pending') {
+      const card = document.createElement('div');
+      card.className = 'bottle-card pending-card';
+      const captured = b.createdAt && b.createdAt.toDate
+        ? fmtDate(b.createdAt.toDate().toISOString().split('T')[0])
+        : 'recently';
+      const photoEl = b.photoUrl
+        ? `<img class="card-photo pending-card" src="${esc(b.photoUrl)}" alt="pending bottle" style="height:240px;object-fit:cover">`
+        : `<div class="card-photo-svg" style="height:240px">${bottleSVG('#7a5020')}</div>`;
+      card.innerHTML = `
+        <div class="card-photo-wrap">${photoEl}</div>
+        <div class="pending-banner">📋 Pending — tap to fill details</div>
+        <div class="card-meta" style="padding-bottom:8px">
+          ${b.cellarNotes ? `<div style="font-size:.75rem;color:var(--muted);font-style:italic;margin-bottom:4px">${esc(b.cellarNotes)}</div>` : ''}
+          <div class="card-purchase">Captured: ${captured}</div>
+        </div>
+        <div class="card-footer">
+          <button class="card-btn" style="background:var(--amber);color:#1a0a00;border-color:var(--amber);font-weight:700;flex:1;margin-right:6px" onclick="openEditModal('${b.id}')">✏️ Fill Details</button>
+          <button class="card-btn" onclick="deletePendingBottle('${b.id}')" title="Discard">✕</button>
+        </div>`;
+      grid.appendChild(card);
+      return;
+    }
+
     const card = document.createElement('div');
     card.className = 'bottle-card' + (b.drank ? ' drank-card' : '');
 
@@ -877,7 +983,7 @@ function openEditModal(id) {
   editingId = id;
   pendingPhotoFile = null;
   clearModal();
-  document.getElementById('modalTitle').textContent = 'Edit Bottle';
+  document.getElementById('modalTitle').textContent = b.status === 'pending' ? '📋 Fill in Details' : 'Edit Bottle';
   document.getElementById('deleteBtnModal').style.display = 'inline-flex';
 
   // populate fields
@@ -953,11 +1059,12 @@ function onPhotoSelect(input) {
 // ─── SAVE BOTTLE ─────────────────────────────────────────────────────────────
 async function saveBottle() {
   const name    = document.getElementById('fName').value.trim();
-  const vintage = parseInt(document.getElementById('fVintage').value);
+  const vintage = parseInt(document.getElementById('fVintage').value) || null;
   document.getElementById('modalErr').textContent = '';
 
-  if (!name)         { document.getElementById('modalErr').textContent = 'Wine name is required.'; return; }
-  if (!vintage)      { document.getElementById('modalErr').textContent = 'Vintage year is required.'; return; }
+  const isPendingEdit = editingId && (allBottles.find(x => x.id === editingId)?.status === 'pending');
+  if (!name) { document.getElementById('modalErr').textContent = 'Wine name is required.'; return; }
+  if (!vintage && !isPendingEdit) { document.getElementById('modalErr').textContent = 'Vintage year is required.'; return; }
 
   const parseNum = id => { const v = parseFloat(document.getElementById(id).value); return isNaN(v) ? null : v; };
   const parseInt2 = id => { const v = parseInt(document.getElementById(id).value); return isNaN(v) ? null : v; };
@@ -984,9 +1091,11 @@ async function saveBottle() {
       vinous:  parseNum('fVinous'),
       decanter:parseNum('fDecanter'),
     },
+    status:     isPendingEdit ? null : undefined,   // promote pending → cellar
     updatedBy:  currentUser.email,
     updatedAt:  firebase.firestore.FieldValue.serverTimestamp(),
   };
+  if (data.status === undefined) delete data.status;
 
   const saveBtn = document.getElementById('saveBtn');
   saveBtn.textContent = 'Saving…';
@@ -1059,6 +1168,106 @@ async function deleteBottle() {
   } catch(e) {
     document.getElementById('modalErr').textContent = e.message;
   }
+}
+
+// ─── QUICK CAPTURE ───────────────────────────────────────────────────────────
+let qcPendingFile = null;
+
+function openQuickCapture() {
+  qcPendingFile = null;
+  document.getElementById('qcPreview').style.display = 'none';
+  document.getElementById('qcPreview').src = '';
+  document.getElementById('qcPlaceholder').style.display = 'block';
+  document.getElementById('qcZone').classList.remove('has-photo');
+  document.getElementById('qcNote').value = '';
+  document.getElementById('qcErr').textContent = '';
+  document.getElementById('qcProgressWrap').style.display = 'none';
+  document.getElementById('qcProgressFill').style.width = '0%';
+  document.getElementById('qcPhotoInput').value = '';
+  document.getElementById('qcOverlay').classList.add('open');
+}
+
+function closeQuickCapture() {
+  document.getElementById('qcOverlay').classList.remove('open');
+}
+
+function qcOverlayClose(e) {
+  if (e.target === document.getElementById('qcOverlay')) closeQuickCapture();
+}
+
+function onQcPhotoSelect(input) {
+  if (!input.files || !input.files[0]) return;
+  qcPendingFile = input.files[0];
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const img = document.getElementById('qcPreview');
+    img.src = ev.target.result;
+    img.style.display = 'block';
+    document.getElementById('qcPlaceholder').style.display = 'none';
+    document.getElementById('qcZone').classList.add('has-photo');
+  };
+  reader.readAsDataURL(qcPendingFile);
+}
+
+async function saveQuickCapture() {
+  if (!qcPendingFile) {
+    document.getElementById('qcErr').textContent = 'Please select a photo first.';
+    return;
+  }
+  const btn = document.getElementById('qcSaveBtn');
+  btn.textContent = 'Saving…'; btn.disabled = true;
+  document.getElementById('qcErr').textContent = '';
+  try {
+    const data = {
+      status:       'pending',
+      name:         null,
+      vintage:      null,
+      drank:        false,
+      drankDate:    null,
+      tastingNotes: null,
+      photoUrl:     null,
+      cellarNotes:  document.getElementById('qcNote').value.trim() || null,
+      createdBy:    currentUser.email,
+      createdAt:    firebase.firestore.FieldValue.serverTimestamp(),
+      updatedBy:    currentUser.email,
+      updatedAt:    firebase.firestore.FieldValue.serverTimestamp(),
+    };
+    const ref   = await db.collection('bottles').add(data);
+    const docId = ref.id;
+    document.getElementById('qcProgressWrap').style.display = 'block';
+    const photoUrl = await uploadPhotoQc(docId, qcPendingFile);
+    await db.collection('bottles').doc(docId).update({ photoUrl });
+    closeQuickCapture();
+    switchTab('pending');
+  } catch(e) {
+    document.getElementById('qcErr').textContent = e.message;
+  } finally {
+    btn.textContent = '💾 Save to Pending'; btn.disabled = false;
+  }
+}
+
+function uploadPhotoQc(docId, file) {
+  return new Promise((resolve, reject) => {
+    const ref  = storage.ref(`bottles/${docId}/photo.jpg`);
+    const task = ref.put(file);
+    task.on('state_changed',
+      snap => {
+        const pct = Math.round(snap.bytesTransferred / snap.totalBytes * 100);
+        document.getElementById('qcProgressFill').style.width = pct + '%';
+        document.getElementById('qcProgressTxt').textContent  = `Uploading… ${pct}%`;
+      },
+      reject,
+      () => task.snapshot.ref.getDownloadURL().then(resolve).catch(reject)
+    );
+  });
+}
+
+async function deletePendingBottle(id) {
+  if (!confirm('Discard this pending capture?')) return;
+  try {
+    await db.collection('bottles').doc(id).delete();
+    storage.ref(`bottles/${id}/photo.jpg`).delete().catch(() => {});
+  } catch(e) { alert(e.message); }
 }
 
 // ─── MARK AS DRANK ───────────────────────────────────────────────────────────
