@@ -325,6 +325,28 @@ body { font-family:'Georgia',serif; background:var(--bg); color:var(--cream); mi
 .notes-area:focus { outline:none; border-color:var(--gold); color:var(--cream); }
 .wine-card.received .notes-area { border-color:var(--recv-bdr); }
 
+/* ─── AUTO-DETECT ────────────────────────────────────────── */
+.auto-detect-btn {
+  width:100%; margin-top:8px; padding:9px; border-radius:6px;
+  border:1px solid rgba(212,170,82,.35); background:rgba(212,170,82,.08);
+  color:var(--gold); font-family:'Segoe UI',sans-serif; font-size:.78rem;
+  font-weight:600; cursor:pointer; letter-spacing:.5px; transition:all .2s;
+}
+.auto-detect-btn:hover { background:rgba(212,170,82,.18); border-color:var(--gold); }
+.auto-detect-btn:disabled { opacity:.5; cursor:not-allowed; }
+.auto-detect-status {
+  font-size:.72rem; font-family:'Segoe UI',sans-serif; margin-top:6px;
+  min-height:16px; line-height:1.5;
+}
+.auto-detect-status.thinking { color:var(--gold); }
+.auto-detect-status.success  { color:var(--green); }
+.auto-detect-status.error    { color:#e74c3c; }
+.field-filled { animation:flashGold .6s ease; }
+@keyframes flashGold {
+  0%  { background:rgba(212,170,82,.25); }
+  100%{ background:transparent; }
+}
+
 /* ─── PENDING / QUICK CAPTURE ────────────────────────────── */
 .hdr-btn.quick { background:var(--amber); color:#1a0a00; }
 .hdr-btn.quick:hover { background:#f39c12; }
@@ -531,7 +553,7 @@ body { font-family:'Georgia',serif; background:var(--bg); color:var(--cream); mi
         <input class="form-input" type="text" id="fVarietal" placeholder="e.g. ~75% Cab. Sauv. · 25% Merlot">
       </div>
 
-      <!-- Photo -->
+      <!-- Photo + Auto-detect -->
       <div class="form-group form-full">
         <label class="form-label">Photo</label>
         <div class="photo-upload-wrap" id="photoWrap" onclick="document.getElementById('photoInput').click()">
@@ -546,6 +568,10 @@ body { font-family:'Georgia',serif; background:var(--bg); color:var(--cream); mi
           <div class="progress-bar-track"><div class="progress-bar-fill" id="progressFill"></div></div>
           <div class="progress-txt-sm" id="progressTxt">Uploading…</div>
         </div>
+        <button type="button" id="autoDetectBtn" class="auto-detect-btn" onclick="autoDetectLabel()" style="display:none">
+          🔍 Auto-detect from label
+        </button>
+        <div id="autoDetectStatus" class="auto-detect-status"></div>
       </div>
 
       <!-- PURCHASE section -->
@@ -691,7 +717,10 @@ const firebaseConfig = {
   messagingSenderId: "779053560118",
   appId:             "1:779053560118:web:fa34c559e6675078160397"
 };
-// ─────────────────────────────────────────────────────────────────────────
+// ─── CLAUDE API KEY (for label auto-detect) ──────────────────────────────────
+// Get your key at console.anthropic.com → API Keys
+const CLAUDE_API_KEY = 'YOUR_ANTHROPIC_API_KEY_HERE';
+// ─────────────────────────────────────────────────────────────────────────────
 
 firebase.initializeApp(firebaseConfig);
 const auth    = firebase.auth();
@@ -736,7 +765,12 @@ document.getElementById('loginPass').addEventListener('keydown', e => { if (e.ke
 
 // ─── FIRESTORE LISTENER ─────────────────────────────────────────────────────
 function startListening() {
-  db.collection('bottles').orderBy('createdAt','desc')
+  // Each user sees only their own bottles (ownerId field).
+  // Bottles without ownerId are legacy Ed-only entries — treated as owned by
+  // the first account (ed@...) by falling back to createdBy match.
+  db.collection('bottles')
+    .where('ownerId', '==', currentUser.uid)
+    .orderBy('createdAt','desc')
     .onSnapshot(snap => {
       allBottles = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       rebuildCountryFilter();
@@ -1014,6 +1048,7 @@ function openEditModal(id) {
     document.getElementById('photoPreview').style.display = 'block';
     document.getElementById('photoPlaceholder').style.display = 'none';
     document.getElementById('photoWrap').classList.add('has-preview');
+    document.getElementById('autoDetectBtn').style.display = 'block';
   }
 
   document.getElementById('bottleOverlay').classList.add('open');
@@ -1032,6 +1067,9 @@ function clearModal() {
   document.getElementById('progressWrap').style.display = 'none';
   document.getElementById('progressFill').style.width = '0%';
   document.getElementById('modalErr').textContent = '';
+  document.getElementById('autoDetectBtn').style.display = 'none';
+  document.getElementById('autoDetectStatus').textContent = '';
+  document.getElementById('autoDetectStatus').className = 'auto-detect-status';
 }
 
 function closeModal() {
@@ -1052,6 +1090,7 @@ function onPhotoSelect(input) {
     document.getElementById('photoPreview').style.display = 'block';
     document.getElementById('photoPlaceholder').style.display = 'none';
     document.getElementById('photoWrap').classList.add('has-preview');
+    document.getElementById('autoDetectBtn').style.display = 'block';
   };
   reader.readAsDataURL(pendingPhotoFile);
 }
@@ -1112,6 +1151,7 @@ async function saveBottle() {
       data.createdBy      = currentUser.email;
       data.createdAt      = firebase.firestore.FieldValue.serverTimestamp();
       data.photoUrl       = null;
+      data.ownerId        = currentUser.uid;
       const ref = await db.collection('bottles').add(data);
       docId = ref.id;
     }
@@ -1167,6 +1207,144 @@ async function deleteBottle() {
     closeModal();
   } catch(e) {
     document.getElementById('modalErr').textContent = e.message;
+  }
+}
+
+// ─── ONE-TIME MIGRATION: claim all legacy bottles for current user ────────────
+// Call this once from browser console after logging in as Ed:  claimLegacyBottles()
+async function claimLegacyBottles() {
+  const snap = await db.collection('bottles').get();
+  const batch = db.batch();
+  let count = 0;
+  snap.docs.forEach(doc => {
+    if (!doc.data().ownerId) {
+      batch.update(doc.ref, { ownerId: currentUser.uid });
+      count++;
+    }
+  });
+  if (count === 0) { console.log('Nothing to migrate.'); return; }
+  await batch.commit();
+  console.log(`✅ Claimed ${count} legacy bottles for ${currentUser.email}`);
+}
+
+// ─── CLAUDE LABEL AUTO-DETECT ────────────────────────────────────────────────
+async function autoDetectLabel() {
+  const btn    = document.getElementById('autoDetectBtn');
+  const status = document.getElementById('autoDetectStatus');
+
+  // Get image source: prefer the local file (higher quality), fall back to saved URL
+  let imagePayload = null;
+  if (pendingPhotoFile) {
+    // Convert local file to base64
+    const b64 = await new Promise((res, rej) => {
+      const r = new FileReader();
+      r.onload  = e => res(e.target.result.split(',')[1]);
+      r.onerror = rej;
+      r.readAsDataURL(pendingPhotoFile);
+    });
+    imagePayload = { type: 'base64', media_type: pendingPhotoFile.type || 'image/jpeg', data: b64 };
+  } else if (editingId) {
+    const b = allBottles.find(x => x.id === editingId);
+    if (b && b.photoUrl) {
+      imagePayload = { type: 'url', url: b.photoUrl };
+    }
+  }
+
+  if (!imagePayload) {
+    status.className = 'auto-detect-status error';
+    status.textContent = 'No photo found — add a photo first.';
+    return;
+  }
+
+  if (!CLAUDE_API_KEY || CLAUDE_API_KEY === 'YOUR_ANTHROPIC_API_KEY_HERE') {
+    status.className = 'auto-detect-status error';
+    status.textContent = 'Add your Anthropic API key to the CLAUDE_API_KEY constant in the HTML.';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = '🔍 Reading label…';
+  status.className = 'auto-detect-status thinking';
+  status.textContent = 'Asking Claude to read the label…';
+
+  try {
+    const prompt = `You are a wine expert examining a wine bottle label photo.
+Extract all wine information visible on the label and return ONLY a valid JSON object with these exact keys:
+{
+  "name": "full wine name (e.g. Château Pontet-Canet or Caymus Cabernet Sauvignon)",
+  "producer": "producer/estate/winery name",
+  "vintage": 2019,
+  "country": "country of origin",
+  "region": "wine region (e.g. Bordeaux, Napa Valley)",
+  "appellation": "specific appellation or AVA (e.g. Pauillac, Rutherford)",
+  "classification": "classification if shown (e.g. Grand Cru Classé, Reserve)",
+  "varietal": "grape variety or blend (e.g. Cabernet Sauvignon, GSM Blend)"
+}
+Use null for any field not visible on the label. Return only the JSON object, no other text.`;
+
+    const body = {
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 400,
+      messages: [{
+        role: 'user',
+        content: [
+          imagePayload.type === 'url'
+            ? { type: 'image', source: { type: 'url', url: imagePayload.url } }
+            : { type: 'image', source: { type: 'base64', media_type: imagePayload.media_type, data: imagePayload.data } },
+          { type: 'text', text: prompt }
+        ]
+      }]
+    };
+
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': CLAUDE_API_KEY,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-allow-browser': 'true',
+        'content-type': 'application/json'
+      },
+      body: JSON.stringify(body)
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error?.message || `API error ${res.status}`);
+    }
+
+    const data = await res.json();
+    const raw  = data.content[0].text.trim();
+    const wine = JSON.parse(raw.startsWith('{') ? raw : raw.match(/\{[\s\S]*\}/)[0]);
+
+    // Fill form fields, flash each one that gets a value
+    const fill = (id, val) => {
+      if (val == null) return;
+      const el = document.getElementById(id);
+      el.value = val;
+      el.classList.remove('field-filled');
+      void el.offsetWidth; // force reflow for animation
+      el.classList.add('field-filled');
+    };
+
+    fill('fName',           wine.name);
+    fill('fProducer',       wine.producer);
+    fill('fVintage',        wine.vintage);
+    fill('fCountry',        wine.country);
+    fill('fRegion',         wine.region);
+    fill('fAppellation',    wine.appellation);
+    fill('fClassification', wine.classification);
+    fill('fVarietal',       wine.varietal);
+
+    const filled = Object.values(wine).filter(v => v != null).length;
+    status.className = 'auto-detect-status success';
+    status.textContent = `✓ Found ${filled} field${filled !== 1 ? 's' : ''} — review and adjust as needed.`;
+
+  } catch(e) {
+    status.className = 'auto-detect-status error';
+    status.textContent = `Error: ${e.message}`;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🔍 Auto-detect from label';
   }
 }
 
@@ -1231,6 +1409,7 @@ async function saveQuickCapture() {
       createdAt:    firebase.firestore.FieldValue.serverTimestamp(),
       updatedBy:    currentUser.email,
       updatedAt:    firebase.firestore.FieldValue.serverTimestamp(),
+      ownerId:      currentUser.uid,
     };
     const ref   = await db.collection('bottles').add(data);
     const docId = ref.id;
