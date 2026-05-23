@@ -707,7 +707,7 @@ body { font-family:'Georgia',serif; background:var(--bg); color:var(--cream); mi
         <div class="qc-ph-sub">Opens your camera on iPhone</div>
       </div>
     </div>
-    <input type="file" id="qcPhotoInput" accept="image/*" capture="environment" style="display:none" onchange="onQcPhotoSelect(this)">
+    <input type="file" id="qcPhotoInput" accept="image/*" style="display:none" onchange="onQcPhotoSelect(this)">
 
     <div style="margin-top:14px">
       <label class="form-label">Quick Note <span style="color:var(--dim);font-weight:400">(optional — rack location, gift, etc.)</span></label>
@@ -1918,13 +1918,14 @@ async function promoteFutureToCellar(wineId, bottleNum) {
     futState[key].cellarBottleId = ref.id;
     futSave(futState);
     renderFutures();
-    if (typeof toast === 'function') {
-      toast(`✓ Added ${wine.name} ${wine.vintage} to Cellar`);
-    } else {
-      alert(`Added ${wine.name} ${wine.vintage} to your Cellar.`);
+    const msg = `✓ Added ${wine.name} ${wine.vintage} to your Cellar.\n\nSwitching to Cellar tab to show it.`;
+    if (confirm(msg + '\n\nClick OK to view in Cellar, Cancel to stay on Futures.')) {
+      switchTab('cellar');
+      // Force a re-render in case the listener is still propagating
+      setTimeout(() => applyFilters(), 300);
     }
   } catch (e) {
-    alert('Could not add to Cellar: ' + e.message);
+    alert('Could not add to Cellar: ' + e.message + '\n\nThe bottle was NOT added. Check Firebase Console → Firestore Rules.');
   }
 }
 </script>
