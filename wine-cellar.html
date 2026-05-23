@@ -2,8 +2,21 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
 <title>Wine Cellar</title>
+
+<!-- PWA / Home Screen Install -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#320c16">
+<meta name="description" content="Personal wine cellar tracker — bottles, ratings, drink windows, futures.">
+
+<!-- iOS Home Screen -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Wine Cellar">
+<link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍷</text></svg>">
 
 <!-- Firebase v8 compat -->
@@ -424,6 +437,7 @@ body { font-family:'Georgia',serif; background:var(--bg); color:var(--cream); mi
         <span class="hdr-user" id="hdrUser"></span>
         <button class="hdr-btn quick" onclick="openQuickCapture()">📷 Capture</button>
         <button class="hdr-btn" onclick="openAddModal()">＋ Add Bottle</button>
+        <button class="hdr-btn" onclick="setClaudeKey()" title="Set Anthropic API key (stored in this browser only)">🔑 API Key</button>
         <button class="hdr-btn logout" onclick="doLogout()">Sign out</button>
       </div>
     </div>
@@ -579,7 +593,11 @@ body { font-family:'Georgia',serif; background:var(--bg); color:var(--cream); mi
         <button type="button" id="autoDetectBtn" class="auto-detect-btn" onclick="autoDetectLabel()" style="display:none">
           🔍 Auto-detect from label
         </button>
+        <button type="button" id="lookupBtn" class="auto-detect-btn" onclick="lookupWineInfo()" style="margin-left:6px">
+          📚 Look up ratings, price & drink window
+        </button>
         <div id="autoDetectStatus" class="auto-detect-status"></div>
+        <div id="lookupStatus" class="auto-detect-status"></div>
       </div>
 
       <!-- PURCHASE section -->
@@ -725,9 +743,24 @@ const firebaseConfig = {
   messagingSenderId: "779053560118",
   appId:             "1:779053560118:web:fa34c559e6675078160397"
 };
-// ─── CLAUDE API KEY (for label auto-detect) ──────────────────────────────────
-// Get your key at console.anthropic.com → API Keys
-const CLAUDE_API_KEY = 'YOUR_ANTHROPIC_API_KEY_HERE';
+// ─── CLAUDE API KEY (for label auto-detect & wine lookup) ───────────────────
+// The key is stored in localStorage (browser-only — never in source).
+// To set it: click "🔑 Set API Key" in the app header, paste your key from
+// console.anthropic.com → API Keys. Recommended: set a $10/month spending limit.
+function getClaudeKey() {
+  return (localStorage.getItem('claude_api_key') || '').trim();
+}
+function setClaudeKey() {
+  const current = getClaudeKey();
+  const masked = current ? '••••' + current.slice(-6) : '(not set)';
+  const next = prompt('Anthropic API Key\nCurrent: ' + masked + '\n\nPaste new key (starts with sk-ant-) or leave blank to clear:', '');
+  if (next === null) return;
+  const trimmed = next.trim();
+  if (!trimmed) { localStorage.removeItem('claude_api_key'); alert('API key cleared.'); return; }
+  if (!trimmed.startsWith('sk-ant-')) { alert('Invalid key format. Should start with sk-ant-'); return; }
+  localStorage.setItem('claude_api_key', trimmed);
+  alert('API key saved to this browser only.');
+}
 // ─────────────────────────────────────────────────────────────────────────────
 
 firebase.initializeApp(firebaseConfig);
@@ -1264,9 +1297,10 @@ async function autoDetectLabel() {
     return;
   }
 
-  if (!CLAUDE_API_KEY || CLAUDE_API_KEY === 'YOUR_ANTHROPIC_API_KEY_HERE') {
+  const CLAUDE_API_KEY = getClaudeKey();
+  if (!CLAUDE_API_KEY) {
     status.className = 'auto-detect-status error';
-    status.textContent = 'Add your Anthropic API key to the CLAUDE_API_KEY constant in the HTML.';
+    status.textContent = 'Tap "🔑 Set API Key" in the header to add your Anthropic API key.';
     return;
   }
 
@@ -1353,6 +1387,129 @@ Use null for any field not visible on the label. Return only the JSON object, no
   } finally {
     btn.disabled = false;
     btn.textContent = '🔍 Auto-detect from label';
+  }
+}
+
+// ─── WINE INFO LOOKUP (ratings, price, drink window) ────────────────────────
+async function lookupWineInfo() {
+  const btn    = document.getElementById('lookupBtn');
+  const status = document.getElementById('lookupStatus');
+  const name    = document.getElementById('fName').value.trim();
+  const vintage = document.getElementById('fVintage').value.trim();
+
+  if (!name || !vintage) {
+    status.className = 'auto-detect-status error';
+    status.textContent = 'Enter wine name and vintage first.';
+    return;
+  }
+  const CLAUDE_API_KEY = getClaudeKey();
+  if (!CLAUDE_API_KEY) {
+    status.className = 'auto-detect-status error';
+    status.textContent = 'Tap "🔑 Set API Key" in the header to add your Anthropic API key.';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Searching…';
+  status.className = 'auto-detect-status thinking';
+  status.textContent = 'Looking up ratings, price, and drink window…';
+
+  try {
+    const prompt = `Find current market information for this wine using web search:
+"${name}" vintage ${vintage}
+
+Search for:
+1. Critic ratings from James Suckling (JS), Wine Advocate / Robert Parker (WA), Vinous (Antonio Galloni), and Decanter
+2. Current average market price in USD (per 750ml bottle)
+3. Recommended drink window (start year and end year)
+4. One-sentence tasting/aging summary
+
+Return ONLY a valid JSON object (no markdown, no other text) with these exact keys:
+{
+  "ratings": { "js": 95, "wa": 94, "vinous": 93, "decanter": 95 },
+  "priceUSD": 75,
+  "drinkWindowStart": 2027,
+  "drinkWindowEnd": 2040,
+  "summary": "brief one-line note on the wine"
+}
+
+Use null for any unknown numeric value. If you can't find rating from a critic, use null for that one.`;
+
+    const body = {
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 1500,
+      tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 4 }],
+      messages: [{ role: 'user', content: prompt }]
+    };
+
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': CLAUDE_API_KEY,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-allow-browser': 'true',
+        'content-type': 'application/json'
+      },
+      body: JSON.stringify(body)
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error?.message || `API error ${res.status}`);
+    }
+
+    const data = await res.json();
+    const textBlock = (data.content || []).find(c => c.type === 'text');
+    if (!textBlock) throw new Error('No text response from Claude.');
+    const raw = textBlock.text.trim();
+    const match = raw.match(/\{[\s\S]*\}/);
+    if (!match) throw new Error('Could not parse response.');
+    const info = JSON.parse(match[0]);
+
+    const fill = (id, val) => {
+      if (val == null) return false;
+      const el = document.getElementById(id);
+      if (!el) return false;
+      el.value = val;
+      el.classList.remove('field-filled');
+      void el.offsetWidth;
+      el.classList.add('field-filled');
+      return true;
+    };
+
+    let filled = 0;
+    if (info.ratings) {
+      if (fill('fJs',       info.ratings.js))       filled++;
+      if (fill('fWa',       info.ratings.wa))       filled++;
+      if (fill('fVinous',   info.ratings.vinous))   filled++;
+      if (fill('fDecanter', info.ratings.decanter)) filled++;
+    }
+    if (fill('fDwStart', info.drinkWindowStart)) filled++;
+    if (fill('fDwEnd',   info.drinkWindowEnd))   filled++;
+
+    // Append market price + summary to cellar notes (don't overwrite existing notes)
+    const notesEl = document.getElementById('fNotes');
+    const extras = [];
+    if (info.priceUSD) extras.push(`Current avg market price: $${info.priceUSD}`);
+    if (info.summary)  extras.push(info.summary);
+    if (extras.length) {
+      const existing = (notesEl.value || '').trim();
+      notesEl.value = (existing ? existing + '\n\n' : '') + extras.join('\n');
+      notesEl.classList.remove('field-filled');
+      void notesEl.offsetWidth;
+      notesEl.classList.add('field-filled');
+      filled++;
+    }
+
+    status.className = 'auto-detect-status success';
+    status.textContent = `✓ Found ${filled} field${filled !== 1 ? 's' : ''} — review and adjust as needed.`;
+
+  } catch (e) {
+    status.className = 'auto-detect-status error';
+    status.textContent = `Error: ${e.message}`;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '📚 Look up ratings, price & drink window';
   }
 }
 
