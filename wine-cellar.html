@@ -250,7 +250,8 @@ body { font-family:'Georgia',serif; background:var(--bg); color:var(--cream); mi
 .photo-preview { width:100%; max-height:200px; object-fit:cover; border-radius:7px; display:block; }
 .photo-upload-txt { font-size:.75rem; color:var(--muted); font-family:'Segoe UI',sans-serif; }
 .photo-upload-icon { font-size:1.8rem; margin-bottom:6px; }
-#photoInput { display:none; }
+/* photoInput visually hidden but accessible (display:none breaks iOS label trigger) */
+#photoInput { position:absolute; left:-9999px; width:1px; height:1px; opacity:0; }
 .progress-bar-wrap { margin-top:8px; display:none; }
 .progress-bar-track { height:4px; background:var(--border); border-radius:2px; overflow:hidden; }
 .progress-bar-fill { height:100%; background:var(--gold); border-radius:2px; width:0%; transition:width .3s; }
@@ -578,14 +579,14 @@ body { font-family:'Georgia',serif; background:var(--bg); color:var(--cream); mi
       <!-- Photo + Auto-detect -->
       <div class="form-group form-full">
         <label class="form-label">Photo</label>
-        <div class="photo-upload-wrap" id="photoWrap" onclick="document.getElementById('photoInput').click()">
+        <label class="photo-upload-wrap" id="photoWrap" for="photoInput" style="cursor:pointer">
           <img class="photo-preview" id="photoPreview" style="display:none" alt="preview">
           <div id="photoPlaceholder">
             <div class="photo-upload-icon">📷</div>
             <div class="photo-upload-txt">Tap to add photo from camera roll or file</div>
           </div>
-        </div>
-        <input type="file" id="photoInput" accept="image/*" onchange="onPhotoSelect(this)">
+        </label>
+        <input type="file" id="photoInput" accept="image/*" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0" onchange="onPhotoSelect(this)">
         <div class="progress-bar-wrap" id="progressWrap">
           <div class="progress-bar-track"><div class="progress-bar-fill" id="progressFill"></div></div>
           <div class="progress-txt-sm" id="progressTxt">Uploading…</div>
@@ -699,15 +700,15 @@ body { font-family:'Georgia',serif; background:var(--bg); color:var(--cream); mi
       <strong style="color:var(--amber)">Pending</strong> tab on your desktop.
     </p>
 
-    <div class="qc-zone" id="qcZone" onclick="document.getElementById('qcPhotoInput').click()">
+    <label class="qc-zone" id="qcZone" for="qcPhotoInput" style="cursor:pointer">
       <img id="qcPreview" alt="bottle preview">
       <div id="qcPlaceholder" style="text-align:center">
         <div class="qc-ph-icon">📷</div>
         <div class="qc-ph-txt">Tap to take or choose a photo</div>
-        <div class="qc-ph-sub">Opens your camera on iPhone</div>
+        <div class="qc-ph-sub">Camera or library on iPhone</div>
       </div>
-    </div>
-    <input type="file" id="qcPhotoInput" accept="image/*" style="display:none" onchange="onQcPhotoSelect(this)">
+    </label>
+    <input type="file" id="qcPhotoInput" accept="image/*" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0" onchange="onQcPhotoSelect(this)">
 
     <div style="margin-top:14px">
       <label class="form-label">Quick Note <span style="color:var(--dim);font-weight:400">(optional — rack location, gift, etc.)</span></label>
