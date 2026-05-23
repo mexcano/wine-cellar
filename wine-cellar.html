@@ -321,6 +321,14 @@ body { font-family:'Georgia',serif; background:var(--bg); color:var(--cream); mi
 .recv-date:focus { outline:none; border-color:var(--gold); color:var(--cream); }
 .recv-date:disabled { opacity:.3; cursor:not-allowed; }
 .wine-card.received .recv-date { border-color:var(--recv-bdr); color:#5aad5a; }
+.promote-btn {
+  background:rgba(212,175,55,.12); border:1px solid var(--gold); color:var(--gold);
+  border-radius:4px; padding:4px 10px; font-size:.7rem; font-family:'Segoe UI',sans-serif;
+  font-weight:600; cursor:pointer; transition:all .15s; white-space:nowrap;
+}
+.promote-btn:hover:not(:disabled) { background:var(--gold); color:#1a1a1a; }
+.promote-btn:disabled { opacity:.35; cursor:not-allowed; }
+.promote-btn.in-cellar { background:rgba(90,173,90,.15); border-color:#5aad5a; color:#5aad5a; opacity:1; }
 .notes-area { width:100%; background:none; border:1px solid var(--border); border-radius:5px; padding:6px 8px; color:var(--muted); font-size:.7rem; font-family:'Segoe UI',sans-serif; resize:none; min-height:40px; line-height:1.5; }
 .notes-area:focus { outline:none; border-color:var(--gold); color:var(--cream); }
 .wine-card.received .notes-area { border-color:var(--recv-bdr); }
@@ -1632,13 +1640,18 @@ function renderFutures() {
     for (let i=1; i<=w.bottles; i++) {
       const bs = bottles[i-1];
       const lbl = w.bottles > 1 ? `Bottle ${i} received` : 'Received';
+      const inCellar = !!bs.cellarBottleId;
+      const promoteDisabled = !bs.received || inCellar;
+      const promoteLabel = inCellar ? '✓ In Cellar' : '→ Add to Cellar';
       bottleRows += `<div class="bottle-row">
         <label class="recv-label">
-          <input type="checkbox" ${bs.received?'checked':''} onchange="futOnCheck('${w.id}',${i},this)">
+          <input type="checkbox" ${bs.received?'checked':''} ${inCellar?'disabled':''} onchange="futOnCheck('${w.id}',${i},this)">
           ${lbl}
         </label>
         <input type="date" class="recv-date" value="${bs.date||''}" ${!bs.received?'disabled':''}
                onchange="futOnDate('${w.id}',${i},this.value)">
+        <button class="promote-btn ${inCellar?'in-cellar':''}" ${promoteDisabled?'disabled':''}
+                onclick="promoteFutureToCellar('${w.id}',${i})">${promoteLabel}</button>
       </div>`;
     }
     const notes = bottles[0].notes || '';
@@ -1702,6 +1715,60 @@ function futOnNotes(id, val) {
   const key = futKey(id, 1);
   if (!futState[key]) futState[key] = {received:false,date:'',notes:''};
   futState[key].notes = val; futSave(futState);
+}
+
+// Promote a received futures bottle to a real Firestore Cellar bottle.
+async function promoteFutureToCellar(wineId, bottleNum) {
+  if (!currentUser) { alert('Sign in first.'); return; }
+  const wine = futureWines.find(w => w.id === wineId);
+  if (!wine) return;
+  const key = futKey(wineId, bottleNum);
+  const bs = futState[key] || {received:false,date:'',notes:''};
+  if (!bs.received) { alert('Mark the bottle as received first.'); return; }
+  if (bs.cellarBottleId) { alert('This bottle is already in your Cellar.'); return; }
+
+  const newBottle = {
+    name:           wine.name,
+    producer:       wine.name,
+    vintage:        wine.vintage,
+    qty:            1,
+    location:       'Cellar',
+    country:        'France',
+    region:         'Bordeaux',
+    appellation:    wine.appellation,
+    classification: wine.classification,
+    varietal:       wine.grapes,
+    drinkWindowStart: null,
+    drinkWindowEnd:   null,
+    cellarNotes:    wine.profile + (bs.notes ? '\n\n' + bs.notes : ''),
+    ratings:        Object.assign({}, wine.ratings),
+    drank:          false,
+    drankDate:      null,
+    tastingNotes:   null,
+    photoUrl:       null,
+    createdBy:      currentUser.email,
+    createdAt:      firebase.firestore.FieldValue.serverTimestamp(),
+    updatedAt:      firebase.firestore.FieldValue.serverTimestamp(),
+    updatedBy:      currentUser.email,
+    ownerId:        currentUser.uid,
+    receivedDate:   bs.date || null,
+    fromFutures:    wineId + '#' + bottleNum,
+  };
+
+  try {
+    const ref = await db.collection('bottles').add(newBottle);
+    if (!futState[key]) futState[key] = {received:true,date:bs.date,notes:bs.notes};
+    futState[key].cellarBottleId = ref.id;
+    futSave(futState);
+    renderFutures();
+    if (typeof toast === 'function') {
+      toast(`✓ Added ${wine.name} ${wine.vintage} to Cellar`);
+    } else {
+      alert(`Added ${wine.name} ${wine.vintage} to your Cellar.`);
+    }
+  } catch (e) {
+    alert('Could not add to Cellar: ' + e.message);
+  }
 }
 </script>
 </body>
