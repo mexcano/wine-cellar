@@ -1885,6 +1885,28 @@ async function promoteFutureToCellar(wineId, bottleNum) {
   if (!bs.received) { alert('Mark the bottle as received first.'); return; }
   if (bs.cellarBottleId) { alert('This bottle is already in your Cellar.'); return; }
 
+  // Server-side dedup: query Firestore for any existing bottle from same futures slot
+  try {
+    const fromFuturesTag = wineId + '#' + bottleNum;
+    const existing = await db.collection('bottles')
+      .where('ownerId', '==', currentUser.uid)
+      .where('fromFutures', '==', fromFuturesTag)
+      .get();
+    if (!existing.empty) {
+      const dupId = existing.docs[0].id;
+      // Remember it so we don't re-prompt
+      if (!futState[key]) futState[key] = {received:true,date:bs.date,notes:bs.notes};
+      futState[key].cellarBottleId = dupId;
+      futSave(futState);
+      renderFutures();
+      alert('This bottle is already in your Cellar (found in Firestore). Future "Add to Cellar" clicks are now blocked.');
+      return;
+    }
+  } catch (e) {
+    // If the dedup query fails (e.g. no index), warn but allow continue
+    console.warn('Dedup check failed, continuing:', e.message);
+  }
+
   const newBottle = {
     name:           wine.name,
     producer:       wine.name,
